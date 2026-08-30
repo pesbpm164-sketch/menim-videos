@@ -16,11 +16,12 @@ class DetailedInclineSimulation(Scene):
         left_wall = Line(origin, top, color=WHITE, stroke_width=2)
         left_wall.set_opacity(0.15)
 
-        title = Text("Detailed: Object on Incline - No Overlap", font_size=26).to_edge(UP, buff=0.3)
+        # CLEAN TITLE - no "No Overlap"
+        title = Text("Object on an Inclined Plane", font_size=32).to_edge(UP, buff=0.4)
 
         arc = Arc(radius=0.6, start_angle=PI - interior, angle=interior, color=YELLOW, stroke_width=5)
         arc.move_arc_center_to(base_end)
-        theta_label = MathTex(r"\theta", color=YELLOW).scale(0.9).move_to(base_end + LEFT*1.2 + UP*0.25)
+        theta_label = MathTex(r"\theta", color=YELLOW).scale(0.9).move_to(base_end + LEFT*1.0 + UP*0.2)
 
         block_size = 0.6
         incline_angle = np.arctan2(-height, base_len)
@@ -36,64 +37,60 @@ class DetailedInclineSimulation(Scene):
         self.play(Write(title))
         self.play(Create(base), Create(incline), Create(left_wall), Create(arc), Write(theta_label), FadeIn(block), run_time=1.5)
 
-        # --- NO OVERLAP LABELS ---
-        # MG - place LEFT of arrow, far from blue line (blue is to right)
-        mg_arrow = Arrow(block.get_center(), block.get_center() + DOWN*1.5, color=WHITE, buff=0, stroke_width=8)
-        mg_label = MathTex(r"\vec{W}=mg", color=WHITE).scale(0.8)
-        mg_label.move_to(block.get_center() + LEFT*1.2 + DOWN*0.7)  # LEFT side, not on blue
+        # MG - WHITE solid, label FAR LEFT to avoid blue line
+        mg_arrow = Arrow(block.get_center(), block.get_center() + DOWN*1.6, color=WHITE, buff=0, stroke_width=8)
+        mg_label = MathTex(r"\vec{W}=mg", color=WHITE).scale(0.85)
+        mg_label.move_to(block.get_center() + LEFT*1.8 + DOWN*0.3)  # FAR LEFT, not near blue
 
         self.play(Create(mg_arrow), Write(mg_label), run_time=1)
-        self.wait(0.5)
 
-        # Components - DOTTED but labels in FREE SPACE
+        # Dotted components
         incline_unit = (base_end - top) / np.linalg.norm(base_end - top)
         perp_unit = -norm
 
-        mg_parallel = DashedLine(block.get_center(), block.get_center() + incline_unit*1.1, color=ORANGE, stroke_width=6, dash_length=0.12)
-        mg_parallel.add_tip(tip_length=0.18)
-        # Label BELOW blue line, in empty space to right
-        mg_parallel_label = MathTex(r"mg\sin\theta", color=ORANGE).scale(0.7)
-        mg_parallel_label.move_to(block.get_center() + RIGHT*2.0 + DOWN*0.8)  # FAR RIGHT, below blue
+        # Parallel - orange dotted along incline
+        mg_parallel = DashedLine(block.get_center(), block.get_center() + incline_unit*1.2, color=ORANGE, stroke_width=6, dash_length=0.12)
+        mg_parallel.add_tip(tip_length=0.2)
+        # Label in EMPTY SPACE below blue line, to the right
+        mg_parallel_label = MathTex(r"mg\sin\theta", color=ORANGE).scale(0.8)
+        mg_parallel_label.move_to(block.get_center() + RIGHT*2.5 + DOWN*1.2)  # FAR RIGHT, well below blue line
 
-        mg_perp = DashedLine(block.get_center(), block.get_center() + perp_unit*1.0, color=GREEN, stroke_width=6, dash_length=0.12)
-        mg_perp.add_tip(tip_length=0.18)
-        # Label FAR LEFT, not near blue
-        mg_perp_label = MathTex(r"mg\cos\theta", color=GREEN).scale(0.7)
-        mg_perp_label.move_to(block.get_center() + LEFT*2.2 + DOWN*0.5)  # FAR LEFT
+        # Perpendicular - green dotted into incline
+        mg_perp = DashedLine(block.get_center(), block.get_center() + perp_unit*1.1, color=GREEN, stroke_width=6, dash_length=0.12)
+        mg_perp.add_tip(tip_length=0.2)
+        # Label FAR LEFT, away from W=mg
+        mg_perp_label = MathTex(r"mg\cos\theta", color=GREEN).scale(0.8)
+        mg_perp_label.move_to(block.get_center() + LEFT*2.8 + DOWN*0.8)  # FAR FAR LEFT, not overlapping W=mg
 
-        dotted_h = DashedLine(block.get_center() + incline_unit*1.1, block.get_center() + incline_unit*1.1 + perp_unit*1.0, color=WHITE, stroke_width=2, dash_length=0.08, stroke_opacity=0.4)
-        dotted_v = DashedLine(block.get_center() + perp_unit*1.0, block.get_center() + incline_unit*1.1 + perp_unit*1.0, color=WHITE, stroke_width=2, dash_length=0.08, stroke_opacity=0.4)
+        dotted_h = DashedLine(block.get_center() + incline_unit*1.2, block.get_center() + incline_unit*1.2 + perp_unit*1.1, color=WHITE, stroke_width=2, dash_length=0.08, stroke_opacity=0.3)
+        dotted_v = DashedLine(block.get_center() + perp_unit*1.1, block.get_center() + incline_unit*1.2 + perp_unit*1.1, color=WHITE, stroke_width=2, dash_length=0.08, stroke_opacity=0.3)
 
         self.play(Create(mg_parallel), Write(mg_parallel_label), run_time=1)
         self.play(Create(mg_perp), Write(mg_perp_label), Create(dotted_h), Create(dotted_v), run_time=1)
-        self.wait(1)
 
-        # Normal - label ABOVE, far from blue
-        n_arrow = Arrow(block.get_center(), block.get_center() + norm*1.1, color=BLUE, buff=0, stroke_width=8)
-        n_label = MathTex(r"\vec{N}=mg\cos\theta", color=BLUE).scale(0.75)
-        n_label.move_to(block.get_center() + UP*1.6 + RIGHT*0.2)  # ABOVE block, not on blue
+        # Normal - blue solid, label TOP
+        n_arrow = Arrow(block.get_center(), block.get_center() + norm*1.2, color=BLUE, buff=0, stroke_width=8)
+        n_label = MathTex(r"\vec{N}=mg\cos\theta", color=BLUE).scale(0.8)
+        n_label.move_to(block.get_center() + UP*1.8)  # TOP, free space
 
         self.play(Create(n_arrow), Write(n_label), run_time=1)
-        self.wait(0.5)
 
-        # Friction - label FAR LEFT, top free space
-        friction = Arrow(block.get_center(), block.get_center() - incline_unit*0.9, color=YELLOW, buff=0, stroke_width=8)
-        friction_label = MathTex(r"\vec{f}_k=\mu_k N", color=YELLOW).scale(0.75)
-        friction_label.move_to(block.get_center() + LEFT*2.0 + UP*0.8)  # FAR LEFT TOP
+        # Friction - yellow solid, label FAR LEFT TOP
+        friction = Arrow(block.get_center(), block.get_center() - incline_unit*1.0, color=YELLOW, buff=0, stroke_width=8)
+        friction_label = MathTex(r"\vec{f}_k=\mu_k N", color=YELLOW).scale(0.8)
+        friction_label.move_to(block.get_center() + LEFT*2.5 + UP*1.0)  # FAR LEFT TOP, not overlapping mg cos
 
         self.play(Create(friction), Write(friction_label), run_time=1)
-        self.wait(1)
 
-        # Bottom equations - in free space, not overlapping
+        # Bottom equations - clear, in free space
         bottom_eq = VGroup(
-            MathTex(r"F_{net}=mg\sin\theta-\mu_k mg\cos\theta", color=WHITE).scale(0.6),
-            MathTex(r"a=g(\sin\theta-\mu_k\cos\theta)", color=GREEN).scale(0.7),
-        ).arrange(DOWN, buff=0.2).to_edge(DOWN, buff=0.5)
+            MathTex(r"F_{net}=mg\sin\theta-\mu_k mg\cos\theta", color=WHITE).scale(0.65),
+            MathTex(r"a=g(\sin\theta-\mu_k\cos\theta)", color=GREEN).scale(0.75),
+        ).arrange(DOWN, buff=0.25).to_edge(DOWN, buff=0.5)
 
         self.play(Write(bottom_eq), run_time=1.5)
-        self.wait(1.5)
+        self.wait(1)
 
-        # Clean up dotted helpers before slide
         self.play(FadeOut(dotted_h), FadeOut(dotted_v))
 
         tracker = ValueTracker(0.15)
@@ -104,13 +101,10 @@ class DetailedInclineSimulation(Scene):
 
         self.add(moving_block, moving_mg, moving_n, moving_f)
         self.remove(block, mg_arrow, n_arrow, friction, mg_parallel, mg_perp)
-
-        # Keep labels but fade the problematic ones that were on blue line
         self.play(FadeOut(mg_label), FadeOut(mg_parallel_label), FadeOut(mg_perp_label), FadeOut(n_label), FadeOut(friction_label))
 
         self.play(tracker.animate.set_value(0.8), run_time=5, rate_func=rate_functions.ease_in_quad)
         self.remove(moving_block, moving_mg, moving_n, moving_f)
-
         final_block = Square(side_length=block_size, color=RED, fill_opacity=0.9).rotate(incline_angle).move_to(point_on_incline(0.8) + offset)
         self.add(final_block)
         self.wait(1)
