@@ -3,37 +3,33 @@ import numpy as np
 
 class InclineFlow30Sec(Scene):
     def construct(self):
-        # Perfect proportions
         base_len = 5.5
         height = 2.2
-        interior_angle = np.arctan(height / base_len)  # ~21.8 deg
+        interior_angle = np.arctan(height / base_len)
         
-        origin = LEFT*3 + DOWN*1.5      # bottom-left
-        base_end = origin + RIGHT*base_len  # bottom-right
-        top = origin + UP*height        # top-left
+        origin = LEFT*3 + DOWN*1.5
+        base_end = origin + RIGHT*base_len
+        top = origin + UP*height
 
         base = Line(origin, base_end, color=WHITE, stroke_width=4)
         incline = Line(top, base_end, color=BLUE, stroke_width=10)
-        left_wall = Line(origin, top, color=WHITE, stroke_width=2, opacity=0.2)
+        left_wall = Line(origin, top, color=WHITE, stroke_width=2)
+        left_wall.set_opacity(0.2)  # FIXED: was opacity= - now set_opacity
 
         title = Text("Object on an Incline: Forces & Motion", font_size=30).to_edge(UP, buff=0.4)
 
-        # Theta INSIDE triangle, at bottom-right corner
         arc = Arc(radius=0.6, start_angle=PI, angle=interior_angle, color=YELLOW, stroke_width=3).move_arc_center_to(base_end)
         theta_label = MathTex(r"\theta", color=YELLOW).scale(0.8).move_to(base_end + LEFT*1.0 + UP*0.35)
 
-        # Block - correct size and tilt exactly matching incline
         block_size = 0.6
-        incline_angle = np.arctan2(-height, base_len)  # negative angle of incline vs horizontal
+        incline_angle = np.arctan2(-height, base_len)
 
-        def point_on_incline(t):  # t=0 at top, 1 at bottom
+        def point_on_incline(t):
             return top + (base_end - top) * t
 
-        # Normal pointing ABOVE incline (outside triangle)
-        # incline vec = (base_len, -height), normal up = (height, base_len)
         norm = np.array([height, base_len, 0])
         norm = norm / np.linalg.norm(norm)
-        offset = norm * 0.32  # small offset so block sits ON line, not below
+        offset = norm * 0.32
 
         start_t = 0.12
         end_t = 0.82
@@ -49,15 +45,12 @@ class InclineFlow30Sec(Scene):
         self.play(FadeIn(block))
         self.wait(1)
 
-        # Forces - proportional
         mg = Arrow(block.get_center(), block.get_center() + DOWN*1.0, color=WHITE, buff=0, stroke_width=5)
         mg_text = MathTex(r"mg", color=WHITE).scale(0.7).next_to(mg, RIGHT, buff=0.1)
 
-        # N perpendicular - same direction as offset (above)
         n_force = Arrow(block.get_center(), block.get_center() + norm*0.9, color=BLUE, buff=0, stroke_width=5)
         n_text = MathTex(r"N=mg\cos\theta", color=BLUE).scale(0.55).next_to(n_force, UP, buff=0.1)
 
-        # Friction up the incline
         incline_unit = (top - base_end) / np.linalg.norm(top - base_end)
         friction = Arrow(block.get_center(), block.get_center() + incline_unit*0.7, color=YELLOW, buff=0, stroke_width=5)
         f_text = MathTex(r"f=\mu N", color=YELLOW).scale(0.6).next_to(friction, LEFT, buff=0.15)
@@ -66,7 +59,6 @@ class InclineFlow30Sec(Scene):
         self.wait(1.5)
         self.play(FadeOut(mg), FadeOut(mg_text), FadeOut(n_force), FadeOut(n_text), FadeOut(friction), FadeOut(f_text))
 
-        # Sliding - block stays ON incline
         tracker = ValueTracker(start_t)
 
         moving_block = always_redraw(lambda: Square(side_length=block_size, color=RED, fill_opacity=0.9)
