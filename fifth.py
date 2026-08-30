@@ -1,93 +1,94 @@
 from manim import *
-import numpy as np
 
-class SimplePendulumSimulation(Scene):
+class EquationsOfMotionIntegration(Scene):
     def construct(self):
-        # Pivot on top center-right
-        pivot = UP*2.0 + RIGHT*1.5
-        L = 3.0
-        theta0 = 30 * DEGREES  # initial angle
-        g = 9.8
-        omega = np.sqrt(g / L)
+        self.camera.background_color = BLACK
+        title = Text("Equations of Motion via Integration", font_size=32).to_edge(UP, buff=0.4)
+        self.play(Write(title), run_time=1)
 
-        title = Text("Simple Pendulum", font_size=32).to_edge(UP, buff=0.4)
+        # STEP BY STEP DERIVATION - latex, like your first 4 cells style
+        eq1 = MathTex(r"a = \frac{dv}{dt}", color=WHITE).scale(1.1)
+        eq2 = MathTex(r"dv = a\,dt", color=ORANGE).scale(1.1)
+        eq3 = MathTex(r"\int_{u}^{v} dv = \int_{0}^{t} a\,dt", color=GREEN).scale(1.0)
+        eq4 = MathTex(r"v - u = at", color=BLUE).scale(1.1)
+        eq5 = MathTex(r"v = u + at", color=YELLOW).scale(1.2)  # FIRST EQUATION
+
+        eq6 = MathTex(r"v = \frac{ds}{dt}", color=WHITE).scale(1.1)
+        eq7 = MathTex(r"ds = v\,dt = (u+at)\,dt", color=ORANGE).scale(1.0)
+        eq8 = MathTex(r"\int_{0}^{s} ds = \int_{0}^{t} (u+at)\,dt", color=GREEN).scale(1.0)
+        eq9 = MathTex(r"s = ut + \frac{1}{2}at^2", color=BLUE).scale(1.2)  # SECOND EQUATION
+
+        eq10 = MathTex(r"a = v\frac{dv}{ds}", color=WHITE).scale(1.1)
+        eq11 = MathTex(r"a\,ds = v\,dv", color=ORANGE).scale(1.1)
+        eq12 = MathTex(r"\int_{0}^{s} a\,ds = \int_{u}^{v} v\,dv", color=GREEN).scale(1.0)
+        eq13 = MathTex(r"as = \frac{v^2 - u^2}{2}", color=BLUE).scale(1.1)
+        eq14 = MathTex(r"v^2 = u^2 + 2as", color=YELLOW).scale(1.2)  # THIRD EQUATION
+
+        # FIRST EQUATION derivation
+        self.play(Write(eq1), run_time=1)
+        self.wait(0.5)
+        self.play(Transform(eq1, eq2), run_time=1)
+        self.play(Transform(eq1, eq3), run_time=1)
+        self.play(Transform(eq1, eq4), run_time=1)
+        self.play(Transform(eq1, eq5), run_time=1)
+        self.wait(0.5)
+        first_box = SurroundingRectangle(eq1, color=YELLOW, buff=0.2)
+        first_label = Text("1st: v = u + at", font_size=22, color=YELLOW).next_to(first_box, DOWN, buff=0.2)
+        self.play(Create(first_box), Write(first_label), run_time=0.8)
+        self.wait(1)
+        self.play(FadeOut(eq1), FadeOut(first_box), FadeOut(first_label), run_time=0.8)
+
+        # SECOND EQUATION
+        self.play(Write(eq6), run_time=1)
+        self.play(Transform(eq6, eq7), run_time=1)
+        self.play(Transform(eq6, eq8), run_time=1)
+        self.play(Transform(eq6, eq9), run_time=1)
+        self.wait(0.5)
+        second_box = SurroundingRectangle(eq6, color=BLUE, buff=0.2)
+        second_label = Text("2nd: s = ut + ½at²", font_size=22, color=BLUE).next_to(second_box, DOWN, buff=0.2)
+        self.play(Create(second_box), Write(second_label), run_time=0.8)
+        self.wait(1)
+        self.play(FadeOut(eq6), FadeOut(second_box), FadeOut(second_label), run_time=0.8)
+
+        # THIRD EQUATION
+        self.play(Write(eq10), run_time=1)
+        self.play(Transform(eq10, eq11), run_time=1)
+        self.play(Transform(eq10, eq12), run_time=1)
+        self.play(Transform(eq10, eq13), run_time=1)
+        self.play(Transform(eq10, eq14), run_time=1)
+        self.wait(0.5)
+        third_box = SurroundingRectangle(eq10, color=YELLOW, buff=0.2)
+        third_label = Text("3rd: v² = u² + 2as", font_size=22, color=YELLOW).next_to(third_box, DOWN, buff=0.2)
+        self.play(Create(third_box), Write(third_label), run_time=0.8)
+        self.wait(1)
+        self.play(FadeOut(eq10), FadeOut(third_box), FadeOut(third_label))
+
+        # FINAL SUMMARY - all 3
+        summary = VGroup(
+            MathTex(r"v = u + at", color=YELLOW).scale(1.1),
+            MathTex(r"s = ut + \frac{1}{2}at^2", color=BLUE).scale(1.1),
+            MathTex(r"v^2 = u^2 + 2as", color=GREEN).scale(1.1),
+        ).arrange(DOWN, buff=0.6).center().shift(DOWN*0.3)
+        summary_title = Text("All Three Equations (via Integration)", font_size=28, color=WHITE).to_edge(UP, buff=0.4)
         
-        # Ground / ceiling
-        ceiling = Line(pivot + LEFT*2, pivot + RIGHT*2, color=WHITE, stroke_width=3)
-        pivot_dot = Dot(pivot, color=WHITE, radius=0.08)
-
-        # LEFT LIST - color matched, no overlap
-        legend = VGroup(
-            MathTex(r"\vec{W}=mg", color=WHITE).scale(0.85),
-            MathTex(r"mg\sin\theta", color=ORANGE).scale(0.85),
-            MathTex(r"mg\cos\theta", color=GREEN).scale(0.85),
-            MathTex(r"\vec{T}= \text{tension}", color=BLUE).scale(0.85),
-            MathTex(r"F_{restoring}=-mg\sin\theta", color=YELLOW).scale(0.65),
-            MathTex(r"a=-g\sin\theta", color=WHITE).scale(0.7),
-            MathTex(r"T_{period}=2\pi\sqrt{L/g}", color=GREEN).scale(0.65),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).to_edge(LEFT, buff=0.5).shift(DOWN*0.2)
-        legend_box = SurroundingRectangle(legend, color=WHITE, buff=0.25, stroke_width=1.5, stroke_opacity=0.4, corner_radius=0.1)
-
-        self.play(Write(title), Create(ceiling), FadeIn(pivot_dot))
-        self.play(Create(legend_box), Write(legend), run_time=1.5)
-
-        # Angle tracker for smooth oscillation
-        time_tracker = ValueTracker(0)
-
-        def get_theta():
-            # Simple harmonic approx: theta = theta0 * cos(omega*t)
-            return theta0 * np.cos(omega * time_tracker.get_value())
-
-        def bob_position(theta):
-            return pivot + RIGHT * L * np.sin(theta) + DOWN * L * np.cos(theta)
-
-        # Always redraw components
-        string = always_redraw(lambda: Line(pivot, bob_position(get_theta()), color=WHITE, stroke_width=4))
-        bob = always_redraw(lambda: Dot(bob_position(get_theta()), color=RED, radius=0.25).set_fill(RED, opacity=0.9))
-
-        # Arc for angle
-        arc = always_redraw(lambda: Arc(radius=0.5, start_angle=-90*DEGREES, angle=get_theta(), color=YELLOW, stroke_width=3).move_arc_center_to(pivot))
-        theta_label = always_redraw(lambda: MathTex(r"\theta", color=YELLOW).scale(0.7).move_to(pivot + DOWN*0.8 + RIGHT*0.3*np.sign(get_theta()) if abs(get_theta())>0.1 else pivot+DOWN*0.8))
-
-        # Forces - color matched to legend
-        # Weight mg - white down
-        mg_arrow = always_redraw(lambda: Arrow(bob_position(get_theta()), bob_position(get_theta()) + DOWN*1.2, color=WHITE, buff=0, stroke_width=6))
-        # Tension T - blue along string up to pivot
-        tension_arrow = always_redraw(lambda: Arrow(bob_position(get_theta()), bob_position(get_theta()) + (pivot - bob_position(get_theta()))/L * 1.0, color=BLUE, buff=0, stroke_width=6))
-        # mg cos - green along string down (radial component)
-        mg_cos_arrow = always_redraw(lambda: DashedLine(bob_position(get_theta()), bob_position(get_theta()) + (bob_position(get_theta()) - pivot)/L * 0.8, color=GREEN, stroke_width=5, dash_length=0.1).add_tip(tip_length=0.15))
-        # mg sin - orange perpendicular to string (tangential restoring)
-        def perp_dir(theta):
-            # Perpendicular to string, towards equilibrium
-            # String direction vector
-            return np.array([-np.cos(theta), -np.sin(theta), 0])  # tangential
-        mg_sin_arrow = always_redraw(lambda: DashedLine(bob_position(get_theta()), bob_position(get_theta()) + perp_dir(get_theta())*0.8*np.sin(get_theta()), color=ORANGE, stroke_width=5, dash_length=0.1).add_tip(tip_length=0.15))
-
-        self.play(Create(string), FadeIn(bob), Create(arc), Write(theta_label), run_time=1)
-        self.play(Create(mg_arrow), Create(tension_arrow), Create(mg_cos_arrow), Create(mg_sin_arrow), run_time=1.5)
-        self.wait(1)
-
-        # Smooth oscillation - no jerk
-        self.play(time_tracker.animate.set_value(10), run_time=10, rate_func=linear)
-
-        self.wait(1)
-
-class PendulumDerivation(Scene):
-    def construct(self):
-        title = Text("Pendulum Equation via Integration", font_size=28).to_edge(UP)
-        self.play(Write(title))
-
-        eqs = VGroup(
-            MathTex(r"\tau = I \alpha = -mgL\sin\theta", color=YELLOW).scale(0.9),
-            MathTex(r"mL^2 \frac{d^2\theta}{dt^2} = -mgL\sin\theta", color=WHITE).scale(0.85),
-            MathTex(r"\frac{d^2\theta}{dt^2} + \frac{g}{L}\sin\theta = 0", color=BLUE).scale(0.9),
-            MathTex(r"\text{Small angle: } \sin\theta \approx \theta", color=GRAY).scale(0.75),
-            MathTex(r"\frac{d^2\theta}{dt^2} + \frac{g}{L}\theta = 0", color=GREEN).scale(0.9),
-            MathTex(r"\theta(t)=\theta_0\cos(\omega t), \quad \omega=\sqrt{g/L}", color=YELLOW).scale(0.85),
-            MathTex(r"T = 2\pi\sqrt{L/g}", color=ORANGE).scale(0.9),
-        ).arrange(DOWN, buff=0.4).center()
-
-        for eq in eqs:
+        self.play(Transform(title, summary_title), run_time=0.8)
+        for eq in summary:
             self.play(Write(eq), run_time=1)
-            self.wait(0.5)
         self.wait(2)
+
+class SimpleIntegrationQuote(Scene):
+    # Short version for quick render - same as your first.py style
+    def construct(self):
+        title = Text("Derivation: v = u + at via Integration", font_size=30).to_edge(UP)
+        self.play(Write(title))
+        eqs = VGroup(
+            MathTex(r"a = \frac{dv}{dt}", color=WHITE),
+            MathTex(r"dv = a\,dt", color=ORANGE),
+            MathTex(r"\int_{u}^{v} dv = \int_{0}^{t} a\,dt", color=GREEN),
+            MathTex(r"v - u = at", color=BLUE),
+            MathTex(r"v = u + at", color=YELLOW),
+        ).arrange(DOWN, buff=0.5).center()
+        for e in eqs:
+            self.play(Write(e), run_time=1)
+            self.wait(0.4)
+        self.wait(1)
