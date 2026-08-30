@@ -5,7 +5,7 @@ class InclineFlow30Sec(Scene):
     def construct(self):
         base_len = 5.5
         height = 2.2
-        interior_angle = np.arctan(height / base_len)
+        interior_angle = np.arctan(height / base_len)  # ~21.8 deg
         
         origin = LEFT*3 + DOWN*1.5
         base_end = origin + RIGHT*base_len
@@ -14,12 +14,16 @@ class InclineFlow30Sec(Scene):
         base = Line(origin, base_end, color=WHITE, stroke_width=4)
         incline = Line(top, base_end, color=BLUE, stroke_width=10)
         left_wall = Line(origin, top, color=WHITE, stroke_width=2)
-        left_wall.set_opacity(0.2)  # FIXED: was opacity= - now set_opacity
+        left_wall.set_opacity(0.2)
 
         title = Text("Object on an Incline: Forces & Motion", font_size=30).to_edge(UP, buff=0.4)
 
-        arc = Arc(radius=0.6, start_angle=PI, angle=interior_angle, color=YELLOW, stroke_width=3).move_arc_center_to(base_end)
-        theta_label = MathTex(r"\theta", color=YELLOW).scale(0.8).move_to(base_end + LEFT*1.0 + UP*0.35)
+        # FIXED: Theta and arc INSIDE triangle
+        # Inside angle is between base (pointing LEFT, 180 deg) and incline (pointing UP-LEFT, 180 - interior)
+        # So arc should go from 180 - interior to 180, inside triangle ABOVE base
+        arc = Arc(radius=0.6, start_angle=PI - interior_angle, angle=interior_angle, color=YELLOW, stroke_width=4).move_arc_center_to(base_end)
+        # Theta label INSIDE triangle, not on line
+        theta_label = MathTex(r"\theta", color=YELLOW).scale(0.9).move_to(base_end + LEFT*1.1 + UP*0.4)
 
         block_size = 0.6
         incline_angle = np.arctan2(-height, base_len)
