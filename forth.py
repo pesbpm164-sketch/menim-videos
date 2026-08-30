@@ -42,7 +42,7 @@ class DetailedInclineSimulation(Scene):
             MathTex(r"\vec{N}=mg\cos\theta", color=BLUE).scale(0.8),
             MathTex(r"\vec{f}_k=\mu_k N", color=YELLOW).scale(0.8),
             MathTex(r"F_{net}=mg\sin\theta-f_k", color=WHITE).scale(0.6),
-            MathTex(r"a=g(\sin\theta-\mu_k\cos\theta)", color=GREEN).scale(0.6),
+            MathTex(r"a=g(\sin\theta-\mu_k\cos\theta)", color=PINK).scale(0.6),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).to_edge(LEFT, buff=0.5).shift(DOWN*0.3)
 
         legend_box = SurroundingRectangle(legend, color=WHITE, buff=0.25, stroke_width=1.5, stroke_opacity=0.4, corner_radius=0.1)
