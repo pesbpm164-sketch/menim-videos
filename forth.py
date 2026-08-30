@@ -12,7 +12,7 @@ class DetailedInclineSimulation(Scene):
         top = origin + UP*height
 
         base = Line(origin, base_end, color=WHITE, stroke_width=4)
-        incline = Line(top, base_end, color=BLUE, stroke_width=10)
+        incline = Line(top, base_end, color=BLUE, stroke_width=4)
         left_wall = Line(origin, top, color=WHITE, stroke_width=2)
         left_wall.set_opacity(0.15)
 
