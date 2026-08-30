@@ -1,94 +1,93 @@
 from manim import *
+import numpy as np
 
-class DeriveEquationsOfMotion(Scene):
+class SimplePendulumSimulation(Scene):
     def construct(self):
-        title = Text("Derivation of Equations of Motion via Integration", font_size=30).to_edge(UP)
-        self.play(Write(title))
-        self.wait(0.5)
+        # Pivot on top center-right
+        pivot = UP*2.0 + RIGHT*1.5
+        L = 3.0
+        theta0 = 30 * DEGREES  # initial angle
+        g = 9.8
+        omega = np.sqrt(g / L)
 
-        # Step 1: a = dv/dt
-        step1 = MathTex(r"a = \frac{dv}{dt}", color=YELLOW).scale(1.1).to_edge(LEFT, buff=1).shift(UP*2)
-        step1_explain = Text("Acceleration is rate of change of velocity", font_size=20, color=WHITE).next_to(step1, DOWN, buff=0.2)
+        title = Text("Simple Pendulum", font_size=32).to_edge(UP, buff=0.4)
         
-        self.play(Write(step1))
-        self.play(Write(step1_explain))
+        # Ground / ceiling
+        ceiling = Line(pivot + LEFT*2, pivot + RIGHT*2, color=WHITE, stroke_width=3)
+        pivot_dot = Dot(pivot, color=WHITE, radius=0.08)
+
+        # LEFT LIST - color matched, no overlap
+        legend = VGroup(
+            MathTex(r"\vec{W}=mg", color=WHITE).scale(0.85),
+            MathTex(r"mg\sin\theta", color=ORANGE).scale(0.85),
+            MathTex(r"mg\cos\theta", color=GREEN).scale(0.85),
+            MathTex(r"\vec{T}= \text{tension}", color=BLUE).scale(0.85),
+            MathTex(r"F_{restoring}=-mg\sin\theta", color=YELLOW).scale(0.65),
+            MathTex(r"a=-g\sin\theta", color=WHITE).scale(0.7),
+            MathTex(r"T_{period}=2\pi\sqrt{L/g}", color=GREEN).scale(0.65),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).to_edge(LEFT, buff=0.5).shift(DOWN*0.2)
+        legend_box = SurroundingRectangle(legend, color=WHITE, buff=0.25, stroke_width=1.5, stroke_opacity=0.4, corner_radius=0.1)
+
+        self.play(Write(title), Create(ceiling), FadeIn(pivot_dot))
+        self.play(Create(legend_box), Write(legend), run_time=1.5)
+
+        # Angle tracker for smooth oscillation
+        time_tracker = ValueTracker(0)
+
+        def get_theta():
+            # Simple harmonic approx: theta = theta0 * cos(omega*t)
+            return theta0 * np.cos(omega * time_tracker.get_value())
+
+        def bob_position(theta):
+            return pivot + RIGHT * L * np.sin(theta) + DOWN * L * np.cos(theta)
+
+        # Always redraw components
+        string = always_redraw(lambda: Line(pivot, bob_position(get_theta()), color=WHITE, stroke_width=4))
+        bob = always_redraw(lambda: Dot(bob_position(get_theta()), color=RED, radius=0.25).set_fill(RED, opacity=0.9))
+
+        # Arc for angle
+        arc = always_redraw(lambda: Arc(radius=0.5, start_angle=-90*DEGREES, angle=get_theta(), color=YELLOW, stroke_width=3).move_arc_center_to(pivot))
+        theta_label = always_redraw(lambda: MathTex(r"\theta", color=YELLOW).scale(0.7).move_to(pivot + DOWN*0.8 + RIGHT*0.3*np.sign(get_theta()) if abs(get_theta())>0.1 else pivot+DOWN*0.8))
+
+        # Forces - color matched to legend
+        # Weight mg - white down
+        mg_arrow = always_redraw(lambda: Arrow(bob_position(get_theta()), bob_position(get_theta()) + DOWN*1.2, color=WHITE, buff=0, stroke_width=6))
+        # Tension T - blue along string up to pivot
+        tension_arrow = always_redraw(lambda: Arrow(bob_position(get_theta()), bob_position(get_theta()) + (pivot - bob_position(get_theta()))/L * 1.0, color=BLUE, buff=0, stroke_width=6))
+        # mg cos - green along string down (radial component)
+        mg_cos_arrow = always_redraw(lambda: DashedLine(bob_position(get_theta()), bob_position(get_theta()) + (bob_position(get_theta()) - pivot)/L * 0.8, color=GREEN, stroke_width=5, dash_length=0.1).add_tip(tip_length=0.15))
+        # mg sin - orange perpendicular to string (tangential restoring)
+        def perp_dir(theta):
+            # Perpendicular to string, towards equilibrium
+            # String direction vector
+            return np.array([-np.cos(theta), -np.sin(theta), 0])  # tangential
+        mg_sin_arrow = always_redraw(lambda: DashedLine(bob_position(get_theta()), bob_position(get_theta()) + perp_dir(get_theta())*0.8*np.sin(get_theta()), color=ORANGE, stroke_width=5, dash_length=0.1).add_tip(tip_length=0.15))
+
+        self.play(Create(string), FadeIn(bob), Create(arc), Write(theta_label), run_time=1)
+        self.play(Create(mg_arrow), Create(tension_arrow), Create(mg_cos_arrow), Create(mg_sin_arrow), run_time=1.5)
         self.wait(1)
 
-        # Step 2: dv = a dt
-        step2 = MathTex(r"dv = a \, dt", color=GREEN).scale(1.1).next_to(step1, DOWN, buff=1)
-        arrow1 = Arrow(step1.get_bottom(), step2.get_top(), color=WHITE, buff=0.1, stroke_width=3)
-        multiply = Text("Multiply both sides by dt", font_size=18, color=GRAY).next_to(arrow1, RIGHT, buff=0.2)
+        # Smooth oscillation - no jerk
+        self.play(time_tracker.animate.set_value(10), run_time=10, rate_func=linear)
 
-        self.play(Create(arrow1), Write(multiply), Write(step2))
         self.wait(1)
 
-        # Step 3: Integrate
-        step3 = VGroup(
-            MathTex(r"\int_{v_0}^{v} dv = \int_{0}^{t} a \, dt", color=BLUE).scale(1.0),
-            MathTex(r"[v]_{v_0}^{v} = a [t]_{0}^{t} \quad (\text{a constant})", color=BLUE).scale(0.9),
-        ).arrange(DOWN, buff=0.3).next_to(step2, DOWN, buff=0.8)
+class PendulumDerivation(Scene):
+    def construct(self):
+        title = Text("Pendulum Equation via Integration", font_size=28).to_edge(UP)
+        self.play(Write(title))
 
-        self.play(Write(step3[0]))
-        self.wait(0.8)
-        self.play(Write(step3[1]))
-        self.wait(1)
+        eqs = VGroup(
+            MathTex(r"\tau = I \alpha = -mgL\sin\theta", color=YELLOW).scale(0.9),
+            MathTex(r"mL^2 \frac{d^2\theta}{dt^2} = -mgL\sin\theta", color=WHITE).scale(0.85),
+            MathTex(r"\frac{d^2\theta}{dt^2} + \frac{g}{L}\sin\theta = 0", color=BLUE).scale(0.9),
+            MathTex(r"\text{Small angle: } \sin\theta \approx \theta", color=GRAY).scale(0.75),
+            MathTex(r"\frac{d^2\theta}{dt^2} + \frac{g}{L}\theta = 0", color=GREEN).scale(0.9),
+            MathTex(r"\theta(t)=\theta_0\cos(\omega t), \quad \omega=\sqrt{g/L}", color=YELLOW).scale(0.85),
+            MathTex(r"T = 2\pi\sqrt{L/g}", color=ORANGE).scale(0.9),
+        ).arrange(DOWN, buff=0.4).center()
 
-        # Step 4: v = v0 + at
-        step4 = MathTex(r"v - v_0 = a t", r"\quad \Rightarrow \quad", r"v = v_0 + a t", color=YELLOW).scale(1.0)
-        step4.next_to(step3, DOWN, buff=0.8)
-        box4 = SurroundingRectangle(step4, color=YELLOW, buff=0.2)
-
-        self.play(Write(step4), Create(box4))
-        self.wait(1.5)
-
-        self.play(FadeOut(step1), FadeOut(step1_explain), FadeOut(arrow1), FadeOut(multiply), FadeOut(step2), FadeOut(step3))
-        self.play(step4.animate.to_edge(UP, buff=1.5).shift(LEFT*0.5), FadeOut(box4), FadeOut(title))
-        self.wait(0.5)
-
-        # Step 5: v = dx/dt
-        step5 = MathTex(r"v = \frac{dx}{dt}", color=ORANGE).scale(1.1).to_edge(LEFT, buff=1).shift(UP*0.5)
-        step5_explain = Text("Velocity is rate of change of displacement", font_size=20).next_to(step5, DOWN, buff=0.2)
-
-        self.play(Write(step5), Write(step5_explain))
-        self.wait(1)
-
-        step6 = MathTex(r"dx = v \, dt = (v_0 + a t) dt", color=GREEN).scale(1.0).next_to(step5, DOWN, buff=0.8)
-        self.play(Write(step6))
-        self.wait(1)
-
-        step7 = VGroup(
-            MathTex(r"\int_{x_0}^{x} dx = \int_{0}^{t} (v_0 + a t) dt", color=BLUE).scale(0.95),
-            MathTex(r"x - x_0 = v_0 t + \frac{1}{2} a t^2", color=BLUE).scale(0.95),
-        ).arrange(DOWN, buff=0.3).next_to(step6, DOWN, buff=0.8)
-
-        self.play(Write(step7[0]))
-        self.wait(0.8)
-        self.play(Write(step7[1]))
-        self.wait(1)
-
-        step8 = MathTex(r"x = x_0 + v_0 t + \frac{1}{2} a t^2", color=YELLOW).scale(1.1).next_to(step7, DOWN, buff=0.8)
-        box8 = SurroundingRectangle(step8, color=YELLOW, buff=0.2)
-
-        self.play(Write(step8), Create(box8))
-        self.wait(2)
-
-        # Clear for incline application
-        self.play(FadeOut(step4), FadeOut(step5), FadeOut(step5_explain), FadeOut(step6), FadeOut(step7), FadeOut(step8), FadeOut(box8))
-
-        # Apply to incline
-        incline_title = Text("Apply to Inclined Plane:", font_size=28, color=BLUE).to_edge(UP, buff=0.5)
-        self.play(Write(incline_title))
-
-        incline_eqs = VGroup(
-            MathTex(r"a = g(\sin\theta - \mu_k \cos\theta)", color=WHITE).scale(0.9),
-            MathTex(r"\Downarrow", color=GRAY).scale(0.8),
-            MathTex(r"v(t) = v_0 + g(\sin\theta - \mu_k \cos\theta) t", color=ORANGE).scale(0.85),
-            MathTex(r"s(t) = s_0 + v_0 t + \frac{1}{2} g(\sin\theta - \mu_k \cos\theta) t^2", color=GREEN).scale(0.8),
-            MathTex(r"\text{If } v_0=0, s_0=0: \quad s = \frac{1}{2} g(\sin\theta - \mu_k \cos\theta) t^2", color=YELLOW).scale(0.75),
-        ).arrange(DOWN, buff=0.4).center().shift(DOWN*0.2)
-
-        for eq in incline_eqs:
+        for eq in eqs:
             self.play(Write(eq), run_time=1)
             self.wait(0.5)
-
         self.wait(2)
