@@ -5,6 +5,8 @@ class InclineFlow30Sec(Scene):
     def construct(self):
         base_len = 5.5
         height = 2.2
+        interior = np.arctan(height / base_len)  # small angle ~21 deg
+        
         origin = LEFT*3 + DOWN*1.5
         base_end = origin + RIGHT*base_len
         top = origin + UP*height
@@ -16,14 +18,15 @@ class InclineFlow30Sec(Scene):
 
         title = Text("Object on an Incline: Forces & Motion", font_size=30).to_edge(UP, buff=0.4)
 
-        # PERFECT THETA - using Angle object, always inside
-        # Lines from base_end outward
-        base_for_angle = Line(base_end, origin, color=WHITE)  # points LEFT
-        incline_for_angle = Line(base_end, top, color=BLUE)  # points UP-LEFT
-        angle_arc = Angle(base_for_angle, incline_for_angle, radius=0.8, color=YELLOW, stroke_width=6)
-        theta_label = MathTex(r"\theta", color=YELLOW).scale(1.1)
-        # Place theta well INSIDE triangle, far from blue line
-        theta_label.move_to(base_end + LEFT*1.6 + UP*0.7)
+        # FIXED ARC - small inside arc, not huge circle
+        # Arc centered at base_end, from incline direction to base direction (small 21 deg)
+        arc = Arc(radius=0.7, start_angle=PI - interior, angle=interior, color=YELLOW, stroke_width=6)
+        arc.move_arc_center_to(base_end)
+        
+        # FIXED THETA - inside triangle, BELOW blue line, ABOVE white base
+        # Blue line at LEFT*1.6 is UP*0.64, so UP*0.3 is well below it, inside
+        theta_label = MathTex(r"\theta", color=YELLOW).scale(1.0)
+        theta_label.move_to(base_end + LEFT*1.3 + UP*0.25)
 
         block_size = 0.6
         incline_angle = np.arctan2(-height, base_len)
@@ -44,7 +47,7 @@ class InclineFlow30Sec(Scene):
 
         self.play(Write(title))
         self.play(Create(base), Create(incline), Create(left_wall))
-        self.play(Create(angle_arc), Write(theta_label), run_time=1)
+        self.play(Create(arc), Write(theta_label), run_time=0.8)
         self.play(FadeIn(block))
         self.wait(1)
 
@@ -70,9 +73,6 @@ class InclineFlow30Sec(Scene):
         final_block = Square(side_length=block_size, color=RED, fill_opacity=0.9).rotate(incline_angle).move_to(end_pos)
         self.add(final_block)
 
-        eq = VGroup(
-            MathTex(r"a = g(\sin\theta - \mu\cos\theta)", color=GREEN).scale(0.9),
-        ).to_edge(DOWN, buff=0.8)
-
+        eq = VGroup(MathTex(r"a = g(\sin\theta - \mu\cos\theta)", color=GREEN).scale(0.9),).to_edge(DOWN, buff=0.8)
         self.play(Write(eq))
         self.wait(2)
